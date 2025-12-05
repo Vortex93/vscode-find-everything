@@ -12,6 +12,19 @@ export class GenericParser extends BaseParser {
   parse(content: string, filePath: string): Function[] {
     const functions: Function[] = [];
     
+    // Find classes (works for Java, C++, C#, etc.)
+    const classPattern = /(?:^|\n)\s*(?:public|private|protected|abstract|final)?\s*class\s+(\w+)(?:\s+extends\s+\w+)?(?:\s+implements\s+[\w,\s]+)?\s*\{/g;
+    let match;
+    while ((match = classPattern.exec(content)) !== null) {
+      const name = match[1];
+      const line = this.extractLineNumber(content, match[0]);
+      const column = this.extractColumnNumber(content, match[0]);
+      
+      const fn = this.createFunction(name, line, column, match[0].trim(), filePath);
+      fn.type = 'class';
+      functions.push(fn);
+    }
+    
     // Generic patterns that work across many C-style languages
     const patterns = [
       // function name(...) { }
@@ -37,19 +50,19 @@ export class GenericParser extends BaseParser {
         const line = this.extractLineNumber(content, match[0]);
         const column = this.extractColumnNumber(content, match[0]);
 
-        functions.push(
-          this.createFunction(
-            name,
-            line,
-            column,
-            match[0].trim(),
-            filePath,
-            [],
-            'unknown',
-            false,
-            false
-          )
+        const fn = this.createFunction(
+          name,
+          line,
+          column,
+          match[0].trim(),
+          filePath,
+          [],
+          'unknown',
+          false,
+          false
         );
+        fn.type = 'function';
+        functions.push(fn);
       }
     }
 

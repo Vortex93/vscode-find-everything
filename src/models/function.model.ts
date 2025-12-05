@@ -1,5 +1,6 @@
 export interface Function {
   name: string;
+  type: 'function' | 'class' | 'method' | 'variable' | 'field';
   language: Language;
   file: string;
   line: number;
@@ -9,6 +10,7 @@ export interface Function {
   returnType: string;
   isAsync: boolean;
   isExported: boolean;
+  className?: string;
   docComment?: string;
 }
 

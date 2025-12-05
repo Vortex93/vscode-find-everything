@@ -22,6 +22,21 @@
         "category": "Find Everything"
       },
       {
+        "command": "vscode-finder.searchClasses",
+        "title": "Find Classes",
+        "category": "Find Everything"
+      },
+      {
+        "command": "vscode-finder.searchVariables",
+        "title": "Find Variables",
+        "category": "Find Everything"
+      },
+      {
+        "command": "vscode-finder.searchFields",
+        "title": "Find Fields",
+        "category": "Find Everything"
+      },
+      {
         "command": "vscode-finder.searchByLanguage",
         "title": "Find Functions by Language",
         "category": "Find Everything"

@@ -13,10 +13,12 @@ export abstract class BaseParser {
     returnType: string = 'void',
     isAsync: boolean = false,
     isExported: boolean = false,
-    docComment?: string
+    docComment?: string,
+    type: 'function' | 'class' | 'method' = 'function'
   ): Function {
     return {
       name,
+      type,
       language: this.getLanguage(),
       file: filePath,
       line,

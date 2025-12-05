@@ -3,6 +3,9 @@ import { FunctionFinderService } from '../services/function-finder.service';
 import { SearchFunctionsCommand } from '../commands/search-functions.command';
 import { SearchByLanguageCommand } from '../commands/search-by-language.command';
 import { SearchInFileCommand } from '../commands/search-in-file.command';
+import { SearchClassesCommand } from '../commands/search-classes.command';
+import { SearchVariablesCommand } from '../commands/search-variables.command';
+import { SearchFieldsCommand } from '../commands/search-fields.command';
 import { FunctionFinderViewProvider } from '../ui/function-finder-view.provider';
 
 let functionFinderService: FunctionFinderService;
@@ -15,8 +18,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Pre-warm cache in background
   setTimeout(() => {
-    functionFinderService.searchAllFunctions().then(functions => {
+    functionFinderService.searchAllFunctions(undefined, true).then(functions => {
       console.log('Background indexing complete:', functions.length, 'functions');
+      if (functions.length > 0) {
+        vscode.window.showInformationMessage(`Indexed ${functions.length} items in workspace`);
+      }
     });
   }, 1000);
 
@@ -24,6 +30,9 @@ export function activate(context: vscode.ExtensionContext) {
   const searchFunctionsCommand = new SearchFunctionsCommand(functionFinderService);
   const searchByLanguageCommand = new SearchByLanguageCommand(functionFinderService);
   const searchInFileCommand = new SearchInFileCommand(functionFinderService);
+  const searchClassesCommand = new SearchClassesCommand(functionFinderService);
+  const searchVariablesCommand = new SearchVariablesCommand(functionFinderService);
+  const searchFieldsCommand = new SearchFieldsCommand(functionFinderService);
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -43,6 +52,27 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       'vscode-finder.searchInFile',
       () => searchInFileCommand.execute()
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'vscode-finder.searchClasses',
+      () => searchClassesCommand.execute()
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'vscode-finder.searchVariables',
+      () => searchVariablesCommand.execute()
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'vscode-finder.searchFields',
+      () => searchFieldsCommand.execute()
     )
   );
 

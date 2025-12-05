@@ -5,6 +5,18 @@ export class PythonParser extends BaseParser {
   parse(content: string, filePath: string): Function[] {
     const functions: Function[] = [];
 
+    // Find classes
+    const classPattern = /^class\s+(\w+)(?:\s*\([^)]*\))?\s*:/gm;
+    let classMatch;
+    while ((classMatch = classPattern.exec(content)) !== null) {
+      const name = classMatch[1];
+      const line = this.extractLineNumber(content, classMatch[0]);
+      const column = this.extractColumnNumber(content, classMatch[0]);
+      const fn = this.createFunction(name, line, column, classMatch[0].trim(), filePath);
+      fn.type = 'class';
+      functions.push(fn);
+    }
+
     // Regex pattern for Python functions
     // Matches: def functionName(params):
     const functionPattern = /^(?<indent>\s*)def\s+(?<name>\w+)\s*\(\s*(?<params>[^)]*)\s*\)\s*(?:->[\w\[\], ]+)?\s*:/gm;
@@ -17,19 +29,19 @@ export class PythonParser extends BaseParser {
       const column = this.extractColumnNumber(content, match[0]);
       const parameters = this.parseParameters(params);
 
-      functions.push(
-        this.createFunction(
-          name,
-          line,
-          column,
-          match[0].trim(),
-          filePath,
-          parameters,
-          'None',
-          false,
-          false
-        )
+      const fn = this.createFunction(
+        name,
+        line,
+        column,
+        match[0].trim(),
+        filePath,
+        parameters,
+        'None',
+        false,
+        false
       );
+      fn.type = 'function';
+      functions.push(fn);
     }
 
     return functions;

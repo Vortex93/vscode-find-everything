@@ -5,6 +5,30 @@ export class TypeScriptParser extends BaseParser {
   parse(content: string, filePath: string): Function[] {
     const functions: Function[] = [];
     
+    // Find classes first
+    const classPattern = /(?<exported>export\s+)?(?<abstract>abstract\s+)?class\s+(?<name>\w+)(?:\s+extends\s+(?<extends>\w+))?(?:\s+implements\s+(?<implements>[\w,\s]+))?\s*\{/gm;
+    let match;
+    while ((match = classPattern.exec(content)) !== null) {
+      const { name, exported, abstract: isAbstract } = match.groups || {};
+      const line = this.extractLineNumber(content, match[0]);
+      const column = this.extractColumnNumber(content, match[0]);
+      
+      functions.push({
+        name,
+        type: 'class',
+        language: this.getLanguage(),
+        file: filePath,
+        line,
+        column,
+        signature: match[0].trim(),
+        parameters: [],
+        returnType: '',
+        isAsync: false,
+        isExported: !!exported,
+        docComment: isAbstract ? 'abstract' : undefined
+      });
+    }
+    
     // Regex patterns for TypeScript functions
     const functionPatterns = [
       // Function declarations: function name(...) { }
@@ -26,19 +50,19 @@ export class TypeScriptParser extends BaseParser {
         const isAsync = !!async;
         const isExported = !!exported;
 
-        functions.push(
-          this.createFunction(
-            name,
-            line,
-            column,
-            match[0].trim(),
-            filePath,
-            parameters,
-            returnType.trim(),
-            isAsync,
-            isExported
-          )
+        const fn = this.createFunction(
+          name,
+          line,
+          column,
+          match[0].trim(),
+          filePath,
+          parameters,
+          returnType.trim(),
+          isAsync,
+          isExported
         );
+        fn.type = 'function';
+        functions.push(fn);
       }
     }
 

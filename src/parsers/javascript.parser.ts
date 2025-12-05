@@ -5,6 +5,18 @@ export class JavaScriptParser extends BaseParser {
   parse(content: string, filePath: string): Function[] {
     const functions: Function[] = [];
 
+    // Find classes
+    const classPattern = /(?:export\s+)?class\s+(\w+)(?:\s+extends\s+\w+)?\s*\{/g;
+    let classMatch;
+    while ((classMatch = classPattern.exec(content)) !== null) {
+      const name = classMatch[1];
+      const line = this.extractLineNumber(content, classMatch[0]);
+      const column = this.extractColumnNumber(content, classMatch[0]);
+      const fn = this.createFunction(name, line, column, classMatch[0].trim(), filePath);
+      fn.type = 'class';
+      functions.push(fn);
+    }
+
     // Regex patterns for JavaScript functions
     const functionPatterns = [
       // Function declarations: function name(...) { }
@@ -24,19 +36,19 @@ export class JavaScriptParser extends BaseParser {
         const column = this.extractColumnNumber(content, match[0]);
         const parameters = this.parseParameters(params);
 
-        functions.push(
-          this.createFunction(
-            name,
-            line,
-            column,
-            match[0].trim(),
-            filePath,
-            parameters,
-            'any',
-            false,
-            false
-          )
+        const fn = this.createFunction(
+          name,
+          line,
+          column,
+          match[0].trim(),
+          filePath,
+          parameters,
+          'any',
+          false,
+          false
         );
+        fn.type = 'function';
+        functions.push(fn);
       }
     }
 

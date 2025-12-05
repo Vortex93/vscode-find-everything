@@ -8,16 +8,17 @@ export class SearchFunctionsCommand {
   async execute(): Promise<void> {
     console.log('SearchFunctionsCommand: execute() called');
     
-    // Show quick pick immediately with loading state
+    // Show quick pick immediately
     const quickPick = vscode.window.createQuickPick();
-    quickPick.placeholder = 'Searching for functions...';
+    quickPick.placeholder = 'Loading functions...';
     quickPick.busy = true;
     quickPick.show();
     console.log('SearchFunctionsCommand: Quick pick shown');
 
     try {
       console.log('SearchFunctionsCommand: Calling searchAllFunctions()');
-      const functions = await this.service.searchAllFunctions();
+      const allItems = await this.service.searchAllFunctions(undefined, false);
+      const functions = allItems.filter(item => item.type === 'function');
       console.log(`SearchFunctionsCommand: Found ${functions.length} functions`);
 
       if (functions.length === 0) {
@@ -30,7 +31,7 @@ export class SearchFunctionsCommand {
       quickPick.busy = false;
       quickPick.placeholder = `Found ${functions.length} functions. Type to search...`;
       quickPick.items = functions.map((fn) => ({
-        label: fn.name,
+        label: `$(symbol-method) ${fn.name}`,
         description: `${fn.file}:${fn.line}`,
         detail: fn.signature,
         function: fn,

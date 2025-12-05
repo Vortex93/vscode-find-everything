@@ -80,57 +80,78 @@ export class FunctionFinderService {
     }
   }
 
-  async searchAllFunctions(workspacePath?: string): Promise<Function[]> {
+  async searchAllFunctions(workspacePath?: string, showProgress: boolean = false): Promise<Function[]> {
     // Return cached results if valid
     if (this.isCacheValid && this.allFunctionsCache.length > 0) {
       console.log('Using cached functions:', this.allFunctionsCache.length);
       return this.allFunctionsCache;
     }
 
-    try {
-      const basePath = workspacePath || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
-      
-      if (!basePath) {
-        vscode.window.showErrorMessage('No workspace folder found');
+    const indexingTask = async (progress?: vscode.Progress<{ message?: string; increment?: number }>) => {
+      try {
+        const basePath = workspacePath || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
+        
+        if (!basePath) {
+          vscode.window.showErrorMessage('No workspace folder found');
+          return [];
+        }
+
+        console.log('Building function index for workspace:', basePath);
+        if (progress) progress.report({ message: 'Scanning workspace...' });
+        
+        const allFunctions: Function[] = [];
+
+        // Search all languages in parallel for speed
+        const languages = [
+          Language.TypeScript,
+          Language.JavaScript,
+          Language.Python,
+          Language.Dart,
+          Language.Go,
+          Language.Java,
+          Language.Cpp,
+          Language.Vue
+        ];
+
+        const results = await Promise.all(
+          languages.map(async (lang, index) => {
+            if (progress) progress.report({ message: `Indexing ${lang} files...`, increment: 100 / languages.length });
+            return this.searchFunctionsByLanguage(basePath, lang);
+          })
+        );
+
+        results.forEach((functions, index) => {
+          console.log(`${languages[index]} functions found:`, functions.length);
+          allFunctions.push(...functions);
+        });
+
+        console.log('Total functions indexed:', allFunctions.length);
+        if (progress) progress.report({ message: 'Caching results...' });
+        
+        // Cache results
+        this.allFunctionsCache = allFunctions;
+        this.isCacheValid = true;
+        await this.saveCacheToDisk();
+        
+        return allFunctions;
+      } catch (error) {
+        this.logger.error('Error searching functions:', error);
+        vscode.window.showErrorMessage(`Error searching functions: ${error}`);
         return [];
       }
+    };
 
-      console.log('Building function index for workspace:', basePath);
-      const allFunctions: Function[] = [];
-
-      // Search all languages in parallel for speed
-      const languages = [
-        Language.TypeScript,
-        Language.JavaScript,
-        Language.Python,
-        Language.Dart,
-        Language.Go,
-        Language.Java,
-        Language.Cpp,
-        Language.Vue
-      ];
-
-      const results = await Promise.all(
-        languages.map(lang => this.searchFunctionsByLanguage(basePath, lang))
+    if (showProgress) {
+      return await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: 'Indexing workspace',
+          cancellable: false,
+        },
+        indexingTask
       );
-
-      results.forEach((functions, index) => {
-        console.log(`${languages[index]} functions found:`, functions.length);
-        allFunctions.push(...functions);
-      });
-
-      console.log('Total functions indexed:', allFunctions.length);
-      
-      // Cache results
-      this.allFunctionsCache = allFunctions;
-      this.isCacheValid = true;
-      await this.saveCacheToDisk();
-      
-      return allFunctions;
-    } catch (error) {
-      this.logger.error('Error searching functions:', error);
-      vscode.window.showErrorMessage(`Error searching functions: ${error}`);
-      return [];
+    } else {
+      return await indexingTask();
     }
   }
 

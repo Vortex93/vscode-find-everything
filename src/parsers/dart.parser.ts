@@ -5,6 +5,18 @@ export class DartParser extends BaseParser {
   parse(content: string, filePath: string): Function[] {
     const functions: Function[] = [];
 
+    // Find classes
+    const classPattern = /(?:abstract\s+)?class\s+(\w+)(?:\s+extends\s+\w+)?(?:\s+implements\s+[\w,\s]+)?\s*\{/g;
+    let classMatch;
+    while ((classMatch = classPattern.exec(content)) !== null) {
+      const name = classMatch[1];
+      const line = this.extractLineNumber(content, classMatch[0]);
+      const column = this.extractColumnNumber(content, classMatch[0]);
+      const fn = this.createFunction(name, line, column, classMatch[0].trim(), filePath);
+      fn.type = 'class';
+      functions.push(fn);
+    }
+
     // Regex pattern for Dart functions
     // Matches: returnType functionName(params) { } or functionName(params) { }
     const functionPattern = /^\s*(?<async>async\s+)?(?<returnType>[\w<>?,\s]+\s+)?(?<name>\w+)\s*\(\s*(?<params>[^)]*)\s*\)\s*(?:async\s+)?(?:=>|{)/gm;
@@ -23,19 +35,19 @@ export class DartParser extends BaseParser {
       const parameters = this.parseParameters(params);
       const isAsync = !!async;
 
-      functions.push(
-        this.createFunction(
-          name,
-          line,
-          column,
-          match[0].trim(),
-          filePath,
-          parameters,
-          returnType ? returnType.trim() : 'void',
-          isAsync,
-          false
-        )
+      const fn = this.createFunction(
+        name,
+        line,
+        column,
+        match[0].trim(),
+        filePath,
+        parameters,
+        returnType ? returnType.trim() : 'void',
+        isAsync,
+        false
       );
+      fn.type = 'function';
+      functions.push(fn);
     }
 
     return functions;
