@@ -19,17 +19,17 @@
       {
         "command": "vscode-finder.searchFunctions",
         "title": "Find Functions",
-        "category": "Function Finder"
+        "category": "Find Everything"
       },
       {
         "command": "vscode-finder.searchByLanguage",
         "title": "Find Functions by Language",
-        "category": "Function Finder"
+        "category": "Find Everything"
       },
       {
         "command": "vscode-finder.searchInFile",
         "title": "Find Functions in Current File",
-        "category": "Function Finder"
+        "category": "Find Everything"
       }
     ],
     "keybindings": [
