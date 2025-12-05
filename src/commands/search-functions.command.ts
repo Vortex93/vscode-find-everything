@@ -6,15 +6,19 @@ export class SearchFunctionsCommand {
   constructor(private service: FunctionFinderService) {}
 
   async execute(): Promise<void> {
+    console.log('SearchFunctionsCommand: execute() called');
+    
     // Show quick pick immediately with loading state
     const quickPick = vscode.window.createQuickPick();
     quickPick.placeholder = 'Searching for functions...';
     quickPick.busy = true;
     quickPick.show();
+    console.log('SearchFunctionsCommand: Quick pick shown');
 
     try {
+      console.log('SearchFunctionsCommand: Calling searchAllFunctions()');
       const functions = await this.service.searchAllFunctions();
-      console.log(`Found ${functions.length} functions`);
+      console.log(`SearchFunctionsCommand: Found ${functions.length} functions`);
 
       if (functions.length === 0) {
         quickPick.hide();
@@ -45,6 +49,7 @@ export class SearchFunctionsCommand {
 
       quickPick.onDidHide(() => quickPick.dispose());
     } catch (error) {
+      console.error('SearchFunctionsCommand: Error:', error);
       quickPick.hide();
       vscode.window.showErrorMessage(`Error finding functions: ${error}`);
     }
