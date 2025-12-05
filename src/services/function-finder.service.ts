@@ -193,6 +193,14 @@ export class FunctionFinderService {
         return '**/*.js';
       case Language.Python:
         return '**/*.py';
+      case Language.Go:
+        return '**/*.go';
+      case Language.Java:
+        return '**/*.java';
+      case Language.Cpp:
+        return '**/*.{cpp,c,h,hpp}';
+      case Language.Vue:
+        return '**/*.vue';
       default:
         return '**/*';
     }
@@ -203,6 +211,10 @@ export class FunctionFinderService {
     if (filePath.endsWith('.dart')) return Language.Dart;
     if (filePath.endsWith('.js')) return Language.JavaScript;
     if (filePath.endsWith('.py')) return Language.Python;
+    if (filePath.endsWith('.go')) return Language.Go;
+    if (filePath.endsWith('.java')) return Language.Java;
+    if (filePath.endsWith('.cpp') || filePath.endsWith('.c') || filePath.endsWith('.h') || filePath.endsWith('.hpp')) return Language.Cpp;
+    if (filePath.endsWith('.vue')) return Language.Vue;
     return Language.TypeScript;
   }
 
