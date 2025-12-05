@@ -12,8 +12,7 @@ export class DartParser extends BaseParser {
       const name = classMatch[1];
       const line = this.extractLineNumber(content, classMatch[0]);
       const column = this.extractColumnNumber(content, classMatch[0]);
-      const fn = this.createFunction(name, line, column, classMatch[0].trim(), filePath);
-      fn.type = 'class';
+      const fn = this.createFunction(name, line, column, classMatch[0].trim(), filePath, 'class');
       functions.push(fn);
     }
 
@@ -41,12 +40,12 @@ export class DartParser extends BaseParser {
         column,
         match[0].trim(),
         filePath,
+        'function',
         parameters,
         returnType ? returnType.trim() : 'void',
         isAsync,
         false
       );
-      fn.type = 'function';
       functions.push(fn);
     }
 

@@ -9,12 +9,12 @@ export abstract class BaseParser {
     column: number,
     signature: string,
     filePath: string,
+    type: 'function' | 'class' | 'method' | 'variable' | 'field' = 'function',
     parameters: Parameter[] = [],
     returnType: string = 'void',
     isAsync: boolean = false,
     isExported: boolean = false,
-    docComment?: string,
-    type: 'function' | 'class' | 'method' = 'function'
+    docComment?: string
   ): Function {
     return {
       name,

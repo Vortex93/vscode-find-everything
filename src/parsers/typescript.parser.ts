@@ -56,12 +56,12 @@ export class TypeScriptParser extends BaseParser {
           column,
           match[0].trim(),
           filePath,
+          'function',
           parameters,
           returnType.trim(),
           isAsync,
           isExported
         );
-        fn.type = 'function';
         functions.push(fn);
       }
     }

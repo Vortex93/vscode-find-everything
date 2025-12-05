@@ -20,8 +20,7 @@ export class GenericParser extends BaseParser {
       const line = this.extractLineNumber(content, match[0]);
       const column = this.extractColumnNumber(content, match[0]);
       
-      const fn = this.createFunction(name, line, column, match[0].trim(), filePath);
-      fn.type = 'class';
+      const fn = this.createFunction(name, line, column, match[0].trim(), filePath, 'class');
       functions.push(fn);
     }
     
@@ -56,12 +55,12 @@ export class GenericParser extends BaseParser {
           column,
           match[0].trim(),
           filePath,
+          'function',
           [],
           'unknown',
           false,
           false
         );
-        fn.type = 'function';
         functions.push(fn);
       }
     }

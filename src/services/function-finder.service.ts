@@ -115,8 +115,11 @@ export class FunctionFinderService {
 
         const results = await Promise.all(
           languages.map(async (lang, index) => {
-            if (progress) progress.report({ message: `Indexing ${lang} files...`, increment: 100 / languages.length });
-            return this.searchFunctionsByLanguage(basePath, lang);
+            const functions = await this.searchFunctionsByLanguage(basePath, lang);
+            if (functions.length > 0 && progress) {
+              progress.report({ message: `Indexing ${lang} files...`, increment: 100 / languages.length });
+            }
+            return functions;
           })
         );
 
@@ -145,7 +148,7 @@ export class FunctionFinderService {
       return await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: 'Indexing workspace',
+          title: 'Find Everything: Indexing workspace',
           cancellable: false,
         },
         indexingTask

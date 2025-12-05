@@ -8,14 +8,14 @@ export class FunctionFinderViewProvider implements vscode.TreeDataProvider<Funct
   readonly onDidChangeTreeData: vscode.Event<FunctionTreeItem | undefined | null | void> =
     this._onDidChangeTreeData.event;
 
-  private functions: Function[] = [];
+  private allItems: Function[] = [];
 
   constructor(private service: FunctionFinderService) {
-    this.loadFunctions();
+    this.loadItems();
   }
 
   refresh(): void {
-    this.loadFunctions();
+    this.loadItems();
     this._onDidChangeTreeData.fire(null);
   }
 
@@ -25,44 +25,90 @@ export class FunctionFinderViewProvider implements vscode.TreeDataProvider<Funct
 
   async getChildren(element?: FunctionTreeItem): Promise<FunctionTreeItem[]> {
     if (!element) {
-      // Root level: group by file
-      const fileGroups = new Map<string, Function[]>();
-      for (const fn of this.functions) {
-        if (!fileGroups.has(fn.file)) {
-          fileGroups.set(fn.file, []);
-        }
-        fileGroups.get(fn.file)!.push(fn);
+      // Root level: show category groups
+      const items: FunctionTreeItem[] = [];
+      
+      const functions = this.allItems.filter(item => item.type === 'function');
+      const classes = this.allItems.filter(item => item.type === 'class');
+      const variables = this.allItems.filter(item => item.type === 'variable');
+      const fields = this.allItems.filter(item => item.type === 'field');
+
+      if (functions.length > 0) {
+        items.push(new FunctionTreeItem(
+          `Functions (${functions.length})`,
+          vscode.TreeItemCollapsibleState.Collapsed,
+          functions,
+          'category',
+          undefined,
+          'function'
+        ));
       }
 
-      return Array.from(fileGroups.entries()).map(
-        ([file, functions]) =>
-          new FunctionTreeItem(
-            file,
-            vscode.TreeItemCollapsibleState.Collapsed,
-            functions,
-            'file',
-            undefined
-          )
-      );
-    } else if (element.contextValue === 'file') {
-      // File level: show functions
-      return (element.functions || []).map(
-        (fn) =>
-          new FunctionTreeItem(
-            `${fn.name}(${fn.parameters.map((p) => p.name).join(', ')})`,
-            vscode.TreeItemCollapsibleState.None,
-            [],
-            'function',
-            fn
-          )
-      );
+      if (classes.length > 0) {
+        items.push(new FunctionTreeItem(
+          `Classes (${classes.length})`,
+          vscode.TreeItemCollapsibleState.Collapsed,
+          classes,
+          'category',
+          undefined,
+          'class'
+        ));
+      }
+
+      if (variables.length > 0) {
+        items.push(new FunctionTreeItem(
+          `Variables (${variables.length})`,
+          vscode.TreeItemCollapsibleState.Collapsed,
+          variables,
+          'category',
+          undefined,
+          'variable'
+        ));
+      }
+
+      if (fields.length > 0) {
+        items.push(new FunctionTreeItem(
+          `Fields (${fields.length})`,
+          vscode.TreeItemCollapsibleState.Collapsed,
+          fields,
+          'category',
+          undefined,
+          'field'
+        ));
+      }
+
+      return items;
+    } else if (element.contextValue === 'category') {
+      // Category level: show items
+      return (element.functions || []).map(item => {
+        const icon = this.getIconForType(item.type);
+        return new FunctionTreeItem(
+          `${item.name}`,
+          vscode.TreeItemCollapsibleState.None,
+          [],
+          'item',
+          item,
+          item.type,
+          icon
+        );
+      });
     }
 
     return [];
   }
 
-  private async loadFunctions(): Promise<void> {
-    this.functions = await this.service.searchAllFunctions();
+  private getIconForType(type: string): string {
+    switch (type) {
+      case 'function': return 'symbol-method';
+      case 'class': return 'symbol-class';
+      case 'variable': return 'symbol-variable';
+      case 'field': return 'symbol-field';
+      default: return 'symbol-misc';
+    }
+  }
+
+  private async loadItems(): Promise<void> {
+    this.allItems = await this.service.searchAllFunctions(undefined, false);
   }
 }
 
@@ -74,20 +120,35 @@ export class FunctionTreeItem extends vscode.TreeItem {
     collapsibleState: vscode.TreeItemCollapsibleState,
     public functions?: Function[],
     public contextValue?: string,
-    fn?: Function
+    fn?: Function,
+    private itemType?: string,
+    iconName?: string
   ) {
     super(label, collapsibleState);
     this.fn = fn;
 
-    if (contextValue === 'function' && fn) {
+    if (contextValue === 'item' && fn) {
       this.command = {
         command: 'vscode-finder.goToFunction',
-        title: 'Go to Function',
+        title: 'Go to Item',
         arguments: [fn],
       };
-      this.iconPath = new vscode.ThemeIcon('symbol-method');
-    } else if (contextValue === 'file') {
-      this.iconPath = new vscode.ThemeIcon('file-code');
+      this.description = `${fn.file}:${fn.line}`;
+      this.tooltip = fn.signature;
+      this.iconPath = new vscode.ThemeIcon(iconName || 'symbol-misc');
+    } else if (contextValue === 'category') {
+      const categoryIcon = iconName || this.getCategoryIcon(itemType);
+      this.iconPath = new vscode.ThemeIcon(categoryIcon);
+    }
+  }
+
+  private getCategoryIcon(type?: string): string {
+    switch (type) {
+      case 'function': return 'symbol-method';
+      case 'class': return 'symbol-class';
+      case 'variable': return 'symbol-variable';
+      case 'field': return 'symbol-field';
+      default: return 'folder';
     }
   }
 }

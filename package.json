@@ -55,11 +55,20 @@
         "when": "editorTextFocus"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "find-everything",
+          "title": "Find Everything",
+          "icon": "$(search)"
+        }
+      ]
+    },
     "views": {
-      "explorer": [
+      "find-everything": [
         {
           "id": "functionFinder",
-          "name": "Function Finder",
+          "name": "Browse",
           "when": "workspaceFolderCount > 0"
         }
       ]
