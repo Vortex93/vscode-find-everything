@@ -1,0 +1,48 @@
+{
+  "name": "vscode-finder",
+  "root": {
+    "files": [
+      "package.json",
+      "tsconfig.json",
+      ".eslintrc.json",
+      ".gitignore",
+      "README.md"
+    ],
+    "directories": [
+      "src/",
+      "out/",
+      "node_modules/"
+    ]
+  },
+  "src": {
+    "extension": [
+      "extension.ts"
+    ],
+    "services": [
+      "function-finder.service.ts"
+    ],
+    "parsers": [
+      "base.parser.ts",
+      "typescript.parser.ts",
+      "dart.parser.ts",
+      "javascript.parser.ts",
+      "python.parser.ts"
+    ],
+    "commands": [
+      "search-functions.command.ts",
+      "search-by-language.command.ts",
+      "search-in-file.command.ts"
+    ],
+    "ui": [
+      "function-finder-view.provider.ts"
+    ],
+    "models": [
+      "function.model.ts"
+    ],
+    "utils": [
+      "logger.ts",
+      "file.utils.ts",
+      "string.utils.ts"
+    ]
+  }
+}
