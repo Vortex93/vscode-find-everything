@@ -6,7 +6,11 @@ export class SearchFunctionsCommand {
   constructor(private service: FunctionFinderService) {}
 
   async execute(): Promise<void> {
+    console.log('SearchFunctionsCommand.execute() called');
+    vscode.window.showInformationMessage('Finding functions...');
+    
     const functions = await this.service.searchAllFunctions();
+    console.log(`Found ${functions.length} functions`);
 
     if (functions.length === 0) {
       vscode.window.showInformationMessage('No functions found in the workspace');
