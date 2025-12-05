@@ -103,7 +103,11 @@ export class FunctionFinderService {
         Language.TypeScript,
         Language.JavaScript,
         Language.Python,
-        Language.Dart
+        Language.Dart,
+        Language.Go,
+        Language.Java,
+        Language.Cpp,
+        Language.Vue
       ];
 
       const results = await Promise.all(
