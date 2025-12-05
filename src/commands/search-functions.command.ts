@@ -6,33 +6,47 @@ export class SearchFunctionsCommand {
   constructor(private service: FunctionFinderService) {}
 
   async execute(): Promise<void> {
-    console.log('SearchFunctionsCommand.execute() called');
-    vscode.window.showInformationMessage('Finding functions...');
-    
-    const functions = await this.service.searchAllFunctions();
-    console.log(`Found ${functions.length} functions`);
+    // Show quick pick immediately with loading state
+    const quickPick = vscode.window.createQuickPick();
+    quickPick.placeholder = 'Searching for functions...';
+    quickPick.busy = true;
+    quickPick.show();
 
-    if (functions.length === 0) {
-      vscode.window.showInformationMessage('No functions found in the workspace');
-      return;
-    }
+    try {
+      const functions = await this.service.searchAllFunctions();
+      console.log(`Found ${functions.length} functions`);
 
-    const selected = await vscode.window.showQuickPick(
-      functions.map((fn) => ({
+      if (functions.length === 0) {
+        quickPick.hide();
+        vscode.window.showInformationMessage('No functions found in the workspace');
+        return;
+      }
+
+      // Update quick pick with results
+      quickPick.busy = false;
+      quickPick.placeholder = `Found ${functions.length} functions. Type to search...`;
+      quickPick.items = functions.map((fn) => ({
         label: fn.name,
         description: `${fn.file}:${fn.line}`,
         detail: fn.signature,
         function: fn,
-      })),
-      {
-        placeHolder: `Found ${functions.length} functions. Select one to navigate...`,
-        matchOnDescription: true,
-        matchOnDetail: true,
-      }
-    );
+      } as any));
 
-    if (selected) {
-      await this.navigateToFunction(selected.function);
+      quickPick.matchOnDescription = true;
+      quickPick.matchOnDetail = true;
+
+      quickPick.onDidAccept(async () => {
+        const selected = quickPick.selectedItems[0] as any;
+        if (selected) {
+          quickPick.hide();
+          await this.navigateToFunction(selected.function);
+        }
+      });
+
+      quickPick.onDidHide(() => quickPick.dispose());
+    } catch (error) {
+      quickPick.hide();
+      vscode.window.showErrorMessage(`Error finding functions: ${error}`);
     }
   }
 

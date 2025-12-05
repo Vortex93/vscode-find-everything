@@ -13,6 +13,13 @@ export function activate(context: vscode.ExtensionContext) {
   // Initialize service
   functionFinderService = new FunctionFinderService(context);
 
+  // Pre-warm cache in background
+  setTimeout(() => {
+    functionFinderService.searchAllFunctions().then(functions => {
+      console.log('Background indexing complete:', functions.length, 'functions');
+    });
+  }, 1000);
+
   // Register commands
   const searchFunctionsCommand = new SearchFunctionsCommand(functionFinderService);
   const searchByLanguageCommand = new SearchByLanguageCommand(functionFinderService);
@@ -66,5 +73,6 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
+  functionFinderService?.dispose();
   console.log('VSCode Function Finder extension deactivated');
 }
